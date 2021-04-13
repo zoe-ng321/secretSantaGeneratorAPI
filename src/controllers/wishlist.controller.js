@@ -23,11 +23,26 @@ exports.updateWishlist = async (req, res) => {
     });
 };
 
-exports.getWishlistForUser = async (req, res) => {
+exports.getWishlistForUserInGroup = async (req, res) => {
   if(!req.body) {
       return res.status(400).send({
           message: "No content"
       });
+  }
+  let wishlist = await Wishlist.findOne({
+    groupId: req.body.groupId,
+    userId: req.body.userId
+  })
+  if (!wishlist){
+    return res.status(400).json({
+      type: "Not Found",
+      msg: "wishlist not found"
+    })
+  }else{
+    return res.status(200).json({
+      data: wishlist,
+      message: "Found wishlist for user"
+    })
   }
 }
 
@@ -36,5 +51,19 @@ exports.getWishlistsForGroup = async (req, res) => {
       return res.status(400).send({
           message: "No content"
       });
+  }
+  let wishlist = await Wishlist.find({
+    groupId: req.body.groupId
+  })
+  if (!wishlist){
+    return res.status(400).json({
+      type: "Not Found",
+      msg: "wishlists not found"
+    })
+  }else{
+    return res.status(200).json({
+      data: wishlist,
+      message: "Found wishlist for user"
+    })
   }
 }
