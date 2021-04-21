@@ -4,6 +4,9 @@ var app = express();
 const wishlists = require('../controllers/wishlist.controller.js');
 
 // Update wishlist
+app.post('/add', wishlists.addWishlist);
+
+// Update wishlist
 app.post('/update', wishlists.updateWishlist);
 
 // Get wishlist based on user
