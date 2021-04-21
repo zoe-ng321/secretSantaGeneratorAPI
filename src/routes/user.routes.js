@@ -1,19 +1,16 @@
-module.exports = (app) => {
-    const users = require('../controllers/user.controller.js');
+var express = require("express");
+var app = express();
 
-    // Login user
-    app.post('/user/login', users.login);
+const users = require('../controllers/user.controller.js');
 
-    // Register user
-    app.post('/user/registration', users.registration);
+// Find user
+app.post('/find', users.findUser);
 
-    // Find user
-    app.post('/user/find', users.findUser);
+// Update profile
+app.put('/updateProfile', users.updateProfile);
 
-    // Update profile
-    app.put('/user/updateProfile', users.updateProfile);
+// Update newPassword
+app.put('/updatePassword', users.updatePassword);
 
-    // Update newPassword
-    app.put('/user/updatePassword', users.updatePassword);
 
-}
+module.exports = app;

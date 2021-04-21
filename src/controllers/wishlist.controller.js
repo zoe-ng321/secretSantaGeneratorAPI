@@ -2,6 +2,31 @@ const User = require('../models/user.model.js');
 const Group = require('../models/group.model.js');
 const Wishlist = require('../models/wishlist.model.js');
 
+exports.addWishlist = async (req, res) => {
+    if(!req.body) {
+        return res.status(400).send({
+            message: "No content"
+        });
+    }
+
+    const wishlist = new Wishlist({
+      wishlist: req.body.wishlist,
+      groupId: req.body.groupId,
+      userId: req.user.id
+    })
+
+    wishlist.save().then(data => {
+      return res.status(200).json({
+        message : "Added wishlist",
+        data: wishlist
+      });
+    }).catch(err => {
+      return res.status(400).send({
+          message: err.message
+      });
+    })
+};
+
 exports.updateWishlist = async (req, res) => {
     if(!req.body) {
         return res.status(400).send({
@@ -9,9 +34,9 @@ exports.updateWishlist = async (req, res) => {
         });
     }
 
-    let {wishlist, id} = req.body;
+    let {wishlist, groupId} = req.body;
     const update = { wishlist: wishlist};
-    const filter = { userId : id };
+    const filter = { userId : req.user.id, groupId: groupId};
 
     const updateWishlist = await Wishlist.findOneAndUpdate(filter, update, { new: true }).catch(error => {
       return res.status(500).send(error);
@@ -63,7 +88,7 @@ exports.getWishlistsForGroup = async (req, res) => {
   }else{
     return res.status(200).json({
       data: wishlist,
-      message: "Found wishlist for user"
+      message: "Found wishlists for group"
     })
   }
 }

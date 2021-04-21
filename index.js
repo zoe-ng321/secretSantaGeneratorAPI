@@ -23,7 +23,16 @@ app.get("/", (req, res, next) => {
  res.json({"message": "Welcome to SecretSantaGenerator!"});
 });
 
-require('./src/routes/user.routes.js')(app);
+const authRoutes = require('./src/routes/auth.routes.js');
+const userRoutes = require('./src/routes/user.routes.js');
+const groupRoutes = require('./src/routes/group.routes.js');
+const wishlistRoutes = require('./src/routes/wishlist.routes.js');
+const verifyTokenRoutes = require('./src/routes/validateToken.routes.js');
+
+app.use("/api/user", authRoutes);
+app.use("/api/user", verifyTokenRoutes, userRoutes);
+app.use("/api/group", verifyTokenRoutes, groupRoutes);
+app.use("/api/wishlist", verifyTokenRoutes, wishlistRoutes);
 
 app.listen(8000, () => {
  console.log("Server running on port 8000");

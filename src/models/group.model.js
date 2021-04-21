@@ -4,12 +4,24 @@ const { Schema } = mongoose;
 const GroupSchema = mongoose.Schema(
   {
     name: String,
-    members: [Schema.Types.ObjectId],
+    members: [{
+      id: Schema.Types.ObjectId,
+      name: String,
+      email: String
+    }],
     creatorId: Schema.Types.ObjectId,
     isAssigned: Boolean,
     pairings: [{
-      gifter: Schema.Types.ObjectId,
-      giftee: Schema.Types.ObjectId
+      gifter: {
+        id: Schema.Types.ObjectId,
+        name: String,
+        email: String
+      },
+      giftee: {
+        id: Schema.Types.ObjectId,
+        name: String,
+        email: String
+      }
     }],
     signUpEndDate: Date,
     endDate: Date,

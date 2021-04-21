@@ -1,13 +1,16 @@
-module.exports = (app) => {
-    const wishlists = require('../controllers/wishlist.controller.js');
+var express = require("express");
+var app = express();
 
-    // Update wishlist
-    app.post('/wishlist/update', wishlists.updateWishlist);
+const wishlists = require('../controllers/wishlist.controller.js');
 
-    // Get wishlist based on user
-    app.get('/wishlist/user', wishlists.getWishlistForUser);
+// Update wishlist
+app.post('/update', wishlists.updateWishlist);
 
-    // Get wishlists for group members
-    app.get('/wishlist/group', wishtlists.getWishlistsForGroup);
+// Get wishlist based on user
+app.get('/user', wishlists.getWishlistForUserInGroup);
 
-}
+// Get wishlists for group members
+app.get('/group', wishlists.getWishlistsForGroup);
+
+
+module.exports = app;

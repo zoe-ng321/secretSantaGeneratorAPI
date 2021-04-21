@@ -1,19 +1,22 @@
-module.exports = (app) => {
-    const groups = require('../controllers/group.controller.js');
+var express = require("express");
+var app = express();
 
-    // Create group
-    app.post('/group/create', groups.createGroup);
+const groups = require('../controllers/group.controller.js');
 
-    // Join group
-    app.post('/group/join', groups.joinGroup);
+// Create group
+app.post('/create', groups.createGroup);
 
-    // Get group
-    app.post('/group/find', groups.findGroup);
+// Join group
+app.post('/join', groups.joinGroup);
 
-    // Generate pairings
-    app.post('/group/generatePairings', groups.generatePairings);
+// Get group
+app.post('/find', groups.findGroup);
 
-    // Add exclusions
-    app.post('/group/addExclusion', groups.addExclusion);
+// Generate pairings
+app.post('/generatePairings', groups.generatePairings);
 
-}
+// Add exclusions
+app.post('/addExclusion', groups.addExclusion);
+
+
+module.exports = app;

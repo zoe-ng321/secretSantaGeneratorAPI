@@ -7,12 +7,11 @@ exports.createGroup = async (req, res) => {
             message: "No content"
         });
     }
-
     // Create a group
     const group = new Group({
       name: req.body.name,
-      members: [req.body.userId],
-      creatorId: req.body.userId,
+      members: [{id: req.user.id, name: req.user.name}],
+      creatorId: req.user.id,
       isAssigned: false,
       signUpEndDate: req.body.signUpEndDate,
       endDate: req.body.endDate,
@@ -22,6 +21,11 @@ exports.createGroup = async (req, res) => {
     // Save group in the database
     group.save()
     .then(data => {
+        User.findByIdAndUpdate(req.user.id,
+          {"$push": {"groupList": {name: req.body.name, groupId: data._id}}}
+        ).catch(error => {
+          return res.status(500).send(error);
+        });
         res.status(200).json({
             status: "Success"
         })
@@ -39,10 +43,31 @@ exports.joinGroup = async(req, res) => {
       });
   }
 
-  await Group.findByIdAndUpdate(req.body._id,
-      { "$push": { "members": req.body.newMemberId}},
+  let group = await Group.findOne({
+    _id: req.body._id
+  })
+
+  let userfound = group.members.find(obj => obj.id == req.user.id);
+  if (userfound){
+    return res.status(400).json({
+      message: "Already joined group"
+    })
+  }
+
+  await User.findByIdAndUpdate(req.user.id,
+      { "$push": { "groupList": {name: req.body.name, groupId: req.body._id}}},
       { "new": true, "upsert": true }
-  ).catch(error => {
+  ).then(data => {
+    Group.findByIdAndUpdate(req.body._id,
+      { "$push": { "members": {name: req.user.name, id: req.user.id}}},
+      { "new": true, "upsert": true }
+    ).catch(error => {
+      return res.status(500).send(error);
+    })
+    res.status(200).json({
+        status: "Success"
+    })
+  }).catch(error => {
     return res.status(500).send(error);
   });
 
@@ -126,7 +151,7 @@ exports.generatePairings = async(req, res) => {
   }
   giftArray.push({gifter: shuffledArray[shuffledArray.length-1], giftee: shuffledArray[0]})
 
-  await Group.updateOne({_id: req.body._id}, {}).catch(error => {
+  await Group.updateOne({_id: req.body._id}, {pairings: giftArray}).catch(error => {
     return res.status(500).send(error);
   });
 
@@ -137,8 +162,8 @@ exports.generatePairings = async(req, res) => {
 
 function checkExclusions(array, exclusions){
   for (let i = 0; i < array.length-1; i++){
-    let id1 = array[i]
-    let id2 = array[i+1]
+    let id1 = array[i].id
+    let id2 = array[i+1].id
     for (let j = 0; j < exclusions; j++){
       if ((exclusions[j].person1 === id1 || exclusions[j].person1 === id2) &&
         (exclusions[j].person2 === id1 || exclusions[j].person2 === id2)){
@@ -146,8 +171,8 @@ function checkExclusions(array, exclusions){
         }
     }
   }
-  let id1 = array[array.length - 1]
-  let id2 = array[0]
+  let id1 = array[array.length - 1].id
+  let id2 = array[0].id
   for (let j = 0; j < exclusions; j++){
     if ((exclusions[j].person1 === id1 || exclusions[j].person1 === id2) &&
       (exclusions[j].person2 === id1 || exclusions[j].person2 === id2)){
