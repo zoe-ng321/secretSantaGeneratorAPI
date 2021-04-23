@@ -9,17 +9,11 @@ exports.findUser = async (req, res) => {
     })
   }
 
-  let {email} = req.user;
-  let user = await User.findOne({
-    email: email
-  })
+  let {email} = req.body;
 
-  if (!user){
-    return res.status(400).json({
-      type: "Not Found",
-      msg: "User not found"
-    })
-  }else{
+  await User.findOne({
+    email: email
+  }).then(user => {
     user = user.toObject();
     delete user.password;
     return res.status(200).json({
@@ -27,7 +21,12 @@ exports.findUser = async (req, res) => {
       message: "user found",
       data: user
     })
-  }
+  }).catch(error=>{
+    return res.status(400).json({
+      type: "Not Found",
+      msg: "User not found"
+    })
+  })
 }
 
 exports.updateProfile = async (req, res) => {
@@ -41,16 +40,18 @@ exports.updateProfile = async (req, res) => {
   const update = { address: address, firstName: firstName, lastName: lastName};
   const filter = { email : email };
 
-  const updatedUser = await User.findOneAndUpdate(filter, update, { new: true }).catch(error => {
+  const updatedUser = await User.findOneAndUpdate(filter, update, { new: true })
+  .then(updatedUser => {
+    updatedUser = updatedUser.toObject();
+    delete updatedUser.password;
+
+    return res.status(200).json({
+      message : "Updated user",
+      data: updatedUser
+    });
+  })
+  .catch(error => {
     return res.status(500).send(error);
-  });
-
-  updatedUser = updatedUser.toObject();
-  delete updatedUser.password;
-
-  return res.status(200).json({
-    message : "Updated user",
-    data: updatedUser
   });
 }
 

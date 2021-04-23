@@ -23,12 +23,14 @@ exports.createGroup = async (req, res) => {
     .then(data => {
         User.findByIdAndUpdate(req.user.id,
           {"$push": {"groupList": {name: req.body.name, groupId: data._id}}}
-        ).catch(error => {
+        ).then(userData => {
+          return res.status(200).json({
+              status: "Success",
+              data: data._id
+          })
+        }).catch(error => {
           return res.status(500).send(error);
         });
-        res.status(200).json({
-            status: "Success"
-        })
     }).catch(err => {
         res.status(500).send({
             message: err.message
@@ -44,7 +46,7 @@ exports.joinGroup = async(req, res) => {
   }
 
   let group = await Group.findOne({
-    _id: req.body._id
+    _id: req.body.groupId
   })
 
   let userfound = group.members.find(obj => obj.id == req.user.id);
@@ -55,17 +57,18 @@ exports.joinGroup = async(req, res) => {
   }
 
   await User.findByIdAndUpdate(req.user.id,
-      { "$push": { "groupList": {name: req.body.name, groupId: req.body._id}}},
+      { "$push": { "groupList": {name: req.body.name, groupId: req.body.groupId}}},
       { "new": true, "upsert": true }
   ).then(data => {
-    Group.findByIdAndUpdate(req.body._id,
+    Group.findByIdAndUpdate(req.body.groupId,
       { "$push": { "members": {name: req.user.name, id: req.user.id}}},
       { "new": true, "upsert": true }
-    ).catch(error => {
+    ).then(groupData => {
+      return res.status(200).json({
+          status: "Success"
+      })
+    }).catch(error => {
       return res.status(500).send(error);
-    })
-    res.status(200).json({
-        status: "Success"
     })
   }).catch(error => {
     return res.status(500).send(error);
@@ -80,21 +83,19 @@ exports.findGroup = async(req, res) => {
       });
   }
 
-  let group = await Group.findOne({
-    _id: req.body._id
-  })
-
-  if(!group){
-    return res.status(400).json({
-      type: "Not Found",
-      msg: "User not found"
-    })
-  }else{
+  await Group.findOne({
+    _id: req.body.groupId
+  }).then(group => {
     return res.status(200).json({
       msg: "group found",
       data: group
     })
-  }
+  }).catch(error => {
+    return res.status(400).json({
+      type: "Not Found",
+      msg: "User not found"
+    })
+  })
 
 }
 
@@ -110,10 +111,14 @@ exports.addExclusion = async(req, res) => {
     person2: req.body.id2
   }
 
-  await Group.findByIdAndUpdate(req.body._id,
+  await Group.findByIdAndUpdate(req.body.groupId,
       { "$push": { "exclusions": exclusion}},
       { "new": true, "upsert": true }
-  ).catch(error => {
+  ).then(data => {
+    return res.status(200).json({
+      "message": "Exclusion added"
+    })
+  }).catch(error => {
     return res.status(500).send(error);
   });
 
@@ -126,8 +131,9 @@ exports.generatePairings = async(req, res) => {
       });
   }
 
+
   let group = await Group.findOne({
-    _id: req.body._id
+    _id: req.body.groupId
   })
 
   if (!group){
@@ -144,6 +150,8 @@ exports.generatePairings = async(req, res) => {
     shuffledArray = shuffle(memberArray)
   }
 
+  console.log("creating gift array")
+
   let giftArray = []
 
   for (let i = 0; i < shuffledArray.length-1; i++){
@@ -151,23 +159,26 @@ exports.generatePairings = async(req, res) => {
   }
   giftArray.push({gifter: shuffledArray[shuffledArray.length-1], giftee: shuffledArray[0]})
 
-  await Group.updateOne({_id: req.body._id}, {pairings: giftArray}).catch(error => {
+  await Group.updateOne({_id: req.body.groupId}, {pairings: giftArray})
+  .then(data => {
+    return res.status(200).json({
+      message : "Generated pairings"
+    });
+  }).catch(error => {
     return res.status(500).send(error);
-  });
-
-  return res.status(200).json({
-    message : "Generated pairings"
   });
 }
 
 function checkExclusions(array, exclusions){
+  console.log("checking exclusions")
+
   for (let i = 0; i < array.length-1; i++){
     let id1 = array[i].id
     let id2 = array[i+1].id
     for (let j = 0; j < exclusions; j++){
       if ((exclusions[j].person1 === id1 || exclusions[j].person1 === id2) &&
         (exclusions[j].person2 === id1 || exclusions[j].person2 === id2)){
-          return true
+          return false
         }
     }
   }
@@ -176,13 +187,15 @@ function checkExclusions(array, exclusions){
   for (let j = 0; j < exclusions; j++){
     if ((exclusions[j].person1 === id1 || exclusions[j].person1 === id2) &&
       (exclusions[j].person2 === id1 || exclusions[j].person2 === id2)){
-        return true
+        return false
       }
   }
-  return false
+  return true
 }
 
 function shuffle(array) {
+  console.log("shuffling array")
+
   var currentIndex = array.length, temporaryValue, randomIndex;
 
   // While there remain elements to shuffle...

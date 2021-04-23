@@ -15,7 +15,8 @@ exports.addWishlist = async (req, res) => {
       userId: req.user.id
     })
 
-    wishlist.save().then(data => {
+    wishlist.save()
+    .then(data => {
       return res.status(200).json({
         message : "Added wishlist",
         data: wishlist
@@ -38,14 +39,17 @@ exports.updateWishlist = async (req, res) => {
     const update = { wishlist: wishlist};
     const filter = { userId : req.user.id, groupId: groupId};
 
-    const updateWishlist = await Wishlist.findOneAndUpdate(filter, update, { new: true }).catch(error => {
+    await Wishlist.findOneAndUpdate(filter, update, { new: true })
+    .then(data => {
+      return res.status(200).json({
+        message : "Updated wishlist",
+        data: data
+      });
+    }).catch(error => {
       return res.status(500).send(error);
     });
 
-    return res.status(200).json({
-      message : "Updated wishlist",
-      data: updateWishlist
-    });
+
 };
 
 exports.getWishlistForUserInGroup = async (req, res) => {
@@ -54,21 +58,20 @@ exports.getWishlistForUserInGroup = async (req, res) => {
           message: "No content"
       });
   }
-  let wishlist = await Wishlist.findOne({
+  await Wishlist.findOne({
     groupId: req.body.groupId,
-    userId: req.body.userId
-  })
-  if (!wishlist){
+    userId: req.user.id
+  }).then(data => {
+    return res.status(200).json({
+      data: data,
+      message: "Found wishlist for user"
+    })
+  }).catch(error => {
     return res.status(400).json({
       type: "Not Found",
       msg: "wishlist not found"
     })
-  }else{
-    return res.status(200).json({
-      data: wishlist,
-      message: "Found wishlist for user"
-    })
-  }
+  })
 }
 
 exports.getWishlistsForGroup = async (req, res) => {
@@ -77,18 +80,17 @@ exports.getWishlistsForGroup = async (req, res) => {
           message: "No content"
       });
   }
-  let wishlist = await Wishlist.find({
+  await Wishlist.find({
     groupId: req.body.groupId
-  })
-  if (!wishlist){
+  }).then(data => {
+    return res.status(200).json({
+      data: data,
+      message: "Found wishlists for group"
+    })
+  }).catch(error=>{
     return res.status(400).json({
       type: "Not Found",
       msg: "wishlists not found"
     })
-  }else{
-    return res.status(200).json({
-      data: wishlist,
-      message: "Found wishlists for group"
-    })
-  }
+  })
 }
