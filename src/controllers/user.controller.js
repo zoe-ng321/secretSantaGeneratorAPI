@@ -3,16 +3,14 @@ const bcrypt = require('bcrypt');
 const jwt = require("jsonwebtoken");
 
 exports.findUser = async (req, res) => {
-  if (!req.body.request){
+  if (!req.user.id){
     return res.status(400).send({
       message: "Empty request body"
     })
   }
 
-  let {email} = req.body.request;
-
   await User.findOne({
-    email: email
+    email: req.user.email
   }).then(user => {
     user = user.toObject();
     delete user.password;
@@ -36,9 +34,22 @@ exports.updateProfile = async (req, res) => {
     })
   }
 
-  const {email, address, firstName, lastName} = req.body.request;
-  const update = { address: address, firstName: firstName, lastName: lastName};
-  const filter = { email : email };
+  const {address, firstName, lastName} = req.body.request;
+  const update = {};
+
+  if (address !== ''){
+    update.address = address
+  }
+
+  if (firstName !== ''){
+    update.firstName = firstName
+  }
+
+  if (lastName !== ''){
+    update.lastName = lastName
+  }
+
+  const filter = { email : req.user.email };
 
   const updatedUser = await User.findOneAndUpdate(filter, update, { new: true })
   .then(updatedUser => {
@@ -62,12 +73,12 @@ exports.updatePassword = async (req, res) => {
     })
   }
 
-  const {email, oldPassword, newPassword} = req.body.request;
-  let user = await User.findOne({email: email})
+  const {oldPassword, newPassword} = req.body.request;
+  let user = await User.findOne({email: req.user.email})
 
   let validPw = await bcrypt.compare(oldPassword, user.password);
   if (validPw){
-    const filter = {email: email};
+    const filter = {email: req.user.email};
     const encNewPassword = await bcrypt.hash(newPassword, 10)
     const update = {password:encNewPassword}
     const updatedUser = await User.findOneAndUpdate(filter, update, { new: true }).catch(error => {

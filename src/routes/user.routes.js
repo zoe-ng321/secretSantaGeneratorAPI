@@ -4,13 +4,13 @@ var app = express();
 const users = require('../controllers/user.controller.js');
 
 // Find user
-app.post('/find', users.findUser);
+app.get('/find', users.findUser);
 
 // Update profile
-app.put('/updateProfile', users.updateProfile);
+app.post('/updateProfile', users.updateProfile);
 
 // Update newPassword
-app.put('/updatePassword', users.updatePassword);
+app.post('/updatePassword', users.updatePassword);
 
 
 module.exports = app;
