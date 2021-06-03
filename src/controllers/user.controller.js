@@ -3,13 +3,13 @@ const bcrypt = require('bcrypt');
 const jwt = require("jsonwebtoken");
 
 exports.findUser = async (req, res) => {
-  if (!req.body){
+  if (!req.body.request){
     return res.status(400).send({
       message: "Empty request body"
     })
   }
 
-  let {email} = req.body;
+  let {email} = req.body.request;
 
   await User.findOne({
     email: email
@@ -30,13 +30,13 @@ exports.findUser = async (req, res) => {
 }
 
 exports.updateProfile = async (req, res) => {
-  if (!req.body){
+  if (!req.body.request){
     return res.status(400).send({
       message: "Empty request body"
     })
   }
 
-  const {email, address, firstName, lastName} = req.body;
+  const {email, address, firstName, lastName} = req.body.request;
   const update = { address: address, firstName: firstName, lastName: lastName};
   const filter = { email : email };
 
@@ -56,13 +56,13 @@ exports.updateProfile = async (req, res) => {
 }
 
 exports.updatePassword = async (req, res) => {
-  if (!req.body){
+  if (!req.body.request){
     return res.status(400).send({
       message: "Empty request body"
     })
   }
 
-  const {email, oldPassword, newPassword} = req.body;
+  const {email, oldPassword, newPassword} = req.body.request;
   let user = await User.findOne({email: email})
 
   let validPw = await bcrypt.compare(oldPassword, user.password);

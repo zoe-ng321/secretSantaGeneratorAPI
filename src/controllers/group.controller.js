@@ -2,19 +2,19 @@ const User = require('../models/user.model.js');
 const Group = require('../models/group.model.js');
 
 exports.createGroup = async (req, res) => {
-    if(!req.body) {
+    if(!req.body.request) {
         return res.status(400).send({
             message: "No content"
         });
     }
     // Create a group
     const group = new Group({
-      name: req.body.name,
+      name: req.body.request.name,
       members: [{id: req.user.id, name: req.user.name}],
       creatorId: req.user.id,
       isAssigned: false,
-      signUpEndDate: req.body.signUpEndDate,
-      endDate: req.body.endDate,
+      signUpEndDate: req.body.request.signUpEndDate,
+      endDate: req.body.request.endDate,
       exclusions: []
     });
 
@@ -22,7 +22,7 @@ exports.createGroup = async (req, res) => {
     group.save()
     .then(data => {
         User.findByIdAndUpdate(req.user.id,
-          {"$push": {"groupList": {name: req.body.name, groupId: data._id}}}
+          {"$push": {"groupList": {name: req.body.request.name, groupId: data._id}}}
         ).then(userData => {
           return res.status(200).json({
               status: "Success",
@@ -39,14 +39,14 @@ exports.createGroup = async (req, res) => {
 };
 
 exports.joinGroup = async(req, res) => {
-  if(!req.body) {
+  if(!req.body.request) {
       return res.status(400).send({
           message: "No content"
       });
   }
 
   let group = await Group.findOne({
-    _id: req.body.groupId
+    _id: req.body.request.groupId
   })
 
   let userfound = group.members.find(obj => obj.id == req.user.id);
@@ -57,10 +57,10 @@ exports.joinGroup = async(req, res) => {
   }
 
   await User.findByIdAndUpdate(req.user.id,
-      { "$push": { "groupList": {name: req.body.name, groupId: req.body.groupId}}},
+      { "$push": { "groupList": {name: req.body.request.name, groupId: req.body.request.groupId}}},
       { "new": true, "upsert": true }
   ).then(data => {
-    Group.findByIdAndUpdate(req.body.groupId,
+    Group.findByIdAndUpdate(req.body.request.groupId,
       { "$push": { "members": {name: req.user.name, id: req.user.id}}},
       { "new": true, "upsert": true }
     ).then(groupData => {
@@ -77,14 +77,14 @@ exports.joinGroup = async(req, res) => {
 }
 
 exports.findGroup = async(req, res) => {
-  if(!req.body) {
+  if(!req.body.request) {
       return res.status(400).send({
           message: "No content"
       });
   }
 
   await Group.findOne({
-    _id: req.body.groupId
+    _id: req.body.request.groupId
   }).then(group => {
     return res.status(200).json({
       msg: "group found",
@@ -100,18 +100,18 @@ exports.findGroup = async(req, res) => {
 }
 
 exports.addExclusion = async(req, res) => {
-  if(!req.body) {
+  if(!req.body.request) {
       return res.status(400).send({
           message: "No content"
       });
   }
 
   const exclusion = {
-    person1: req.body.id1,
-    person2: req.body.id2
+    person1: req.body.request.id1,
+    person2: req.body.request.id2
   }
 
-  await Group.findByIdAndUpdate(req.body.groupId,
+  await Group.findByIdAndUpdate(req.body.request.groupId,
       { "$push": { "exclusions": exclusion}},
       { "new": true, "upsert": true }
   ).then(data => {
@@ -125,7 +125,7 @@ exports.addExclusion = async(req, res) => {
 }
 
 exports.generatePairings = async(req, res) => {
-  if(!req.body) {
+  if(!req.body.request) {
       return res.status(400).send({
           message: "No content"
       });
@@ -133,7 +133,7 @@ exports.generatePairings = async(req, res) => {
 
 
   let group = await Group.findOne({
-    _id: req.body.groupId
+    _id: req.body.request.groupId
   })
 
   if (!group){
@@ -159,7 +159,7 @@ exports.generatePairings = async(req, res) => {
   }
   giftArray.push({gifter: shuffledArray[shuffledArray.length-1], giftee: shuffledArray[0]})
 
-  await Group.updateOne({_id: req.body.groupId}, {pairings: giftArray})
+  await Group.updateOne({_id: req.body.request.groupId}, {pairings: giftArray})
   .then(data => {
     return res.status(200).json({
       message : "Generated pairings"

@@ -3,13 +3,13 @@ const bcrypt = require('bcrypt');
 const jwt = require("jsonwebtoken");
 
 exports.login = async (req, res) => {
-    if(!req.body) {
+    if(!req.body.request) {
         return res.status(400).send({
             message: "Login content can not be empty"
         });
     }
 
-    let {email, password} = req.body;
+    let {email, password} = req.body.request;
     let user = await User.findOne({
       email: email
     })
@@ -30,23 +30,20 @@ exports.login = async (req, res) => {
       process.env.TOKEN_SECRET
     );
     res.header("auth-token", token).json({
-      error: null,
-      data: {
-        token
-      },
+      token: token
     });
 };
 
 exports.registration = async (req, res) => {
 
-    if(!req.body) {
+    if(!req.body.request) {
       return res.status(400).send({
         message: "Registration content can not be empty"
       });
     }
 
     let alreadyRegistered = await User.findOne({
-      email: req.body.email
+      email: req.body.request.email
     });
 
     if (alreadyRegistered){
@@ -57,11 +54,11 @@ exports.registration = async (req, res) => {
 
     // Create a User
     const user = new User({
-      firstName: req.body.firstName,
-      lastName: req.body.lastName,
-      email: req.body.email,
-      password: await bcrypt.hash(req.body.password, 10),
-      address: req.body.address
+      firstName: req.body.request.firstName,
+      lastName: req.body.request.lastName,
+      email: req.body.request.email,
+      password: await bcrypt.hash(req.body.request.password, 10),
+      address: req.body.request.address
     });
 
     // Save user in the database
