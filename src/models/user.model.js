@@ -10,7 +10,9 @@ const UserSchema = mongoose.Schema(
     address: String,
     groupList: [{
       groupId: Schema.Types.ObjectId,
-      name: String
+      name: String,
+      signUpEndDate: Date,
+      endDate: Date
     }]
   },
   {

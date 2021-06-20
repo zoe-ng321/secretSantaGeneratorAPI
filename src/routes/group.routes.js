@@ -18,5 +18,7 @@ app.post('/generatePairings', groups.generatePairings);
 // Add exclusions
 app.post('/addExclusion', groups.addExclusion);
 
+// Get info for group dashboard
+app.post('/groupDashboard', groups.groupDashboard);
 
 module.exports = app;

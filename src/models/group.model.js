@@ -7,7 +7,8 @@ const GroupSchema = mongoose.Schema(
     members: [{
       id: Schema.Types.ObjectId,
       name: String,
-      email: String
+      email: String,
+      address: String
     }],
     creatorId: Schema.Types.ObjectId,
     isAssigned: Boolean,
