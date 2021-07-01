@@ -38,8 +38,9 @@ exports.updateWishlist = async (req, res) => {
     let {wishlist, groupId} = req.body.request;
     const update = { wishlist: wishlist};
     const filter = { userId : req.user.id, groupId: groupId};
-
-    await Wishlist.findOneAndUpdate(filter, update, { new: true })
+    
+    console.log(filter)
+    await Wishlist.findOneAndUpdate(filter, update, { new: true, upsert: true })
     .then(data => {
       return res.status(200).json({
         message : "Updated wishlist",
