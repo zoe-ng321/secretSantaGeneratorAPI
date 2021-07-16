@@ -92,6 +92,12 @@ exports.joinGroup = async(req, res) => {
     _id: req.body.request.groupId
   })
 
+  if (group.isAssigned){
+    return res.status(400).json({
+      message: "Deadline to join group has passed"
+    })
+  }
+
   let userfound = group.members.find(obj => obj.id == req.user.id);
   if (userfound){
     return res.status(400).json({
@@ -100,21 +106,28 @@ exports.joinGroup = async(req, res) => {
   }
 
   await User.findByIdAndUpdate(req.user.id,
-      { "$push": { "groupList": {name: req.body.request.name, groupId: req.body.request.groupId,
+      { "$push": { "groupList": {name: group.name, groupId: req.body.request.groupId,
         signUpEndDate: group.signUpEndDate, endDate: group.endDate}}},
       { "new": true, "upsert": true }
   ).then(data => {
     Group.findByIdAndUpdate(req.body.request.groupId,
       { "$push": { "members": {name: req.user.name, id: req.user.id, address: data.address}}},
       { "new": true, "upsert": true }
-    ).then(groupData => {
+    ).then(data => {
+      const wishlist = new Wishlist({
+        wishlist: req.body.request.wishlist,
+        groupId: req.body.request.groupId,
+        userId: req.user.id
+      })
+      wishlist.save()
+    .then(groupData => {
       return res.status(200).json({
           status: "Success"
       })
     }).catch(error => {
       return res.status(500).send(error);
     })
-  }).catch(error => {
+  })}).catch(error => {
     return res.status(500).send(error);
   });
 
