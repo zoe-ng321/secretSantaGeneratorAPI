@@ -36,6 +36,8 @@ app.use("/api/user", verifyTokenRoutes, userRoutes);
 app.use("/api/group", verifyTokenRoutes, groupRoutes);
 app.use("/api/wishlist", verifyTokenRoutes, wishlistRoutes);
 
-app.listen(8000, () => {
- console.log("Server running on port 8000");
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+	console.log(`App listening on http://localhost:${PORT}`);
 });
